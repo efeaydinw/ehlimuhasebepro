@@ -363,21 +363,35 @@ $('adminPassSet').onclick=async()=>{
   $('adminPassNew').value=''; toast('Yönetici şifresi güncellendi'); await loadSettings();
 };
 
-$('cashierPassSet').onclick=async()=>{
-  const newPass=$('cashierPassNew').value.trim(); if(!newPass || newPass.length<6){toast('6+ karakter gir',false);return;}
-  const prev=(await supa.auth.getSession())?.data?.session;
-  if(!prev){ toast('Oturum yok',false); return; }
-  const s = await supa.from('settings').select('cashier_pass').eq('tenant_id',TENANT_ID).single();
+$('cashierPassSet').onclick = async () => {
+  const newPass = $('cashierPassNew').value.trim();
+  if (!newPass || newPass.length < 6) { toast('6+ karakter gir', false); return; }
+
+  // Eski kasiyer şifresini settings'ten al
+  const s = await supa.from('settings').select('cashier_pass').eq('tenant_id', TENANT_ID).single();
   const oldPass = s.data?.cashier_pass;
-  const { error:e1 } = await supa.auth.signInWithPassword({ email:'cashier@local.local', password: oldPass });
-  if(e1){ toast('Geçici giriş hata: '+e1.message,false); return; }
-  const { error:e2 } = await supa.auth.updateUser({ password:newPass });
-  if(e2){ toast('Şifre değişmedi: '+e2.message,false); return; }
-  await supa.from('settings').update({ cashier_pass:newPass, updated_at:new Date().toISOString() }).eq('tenant_id',TENANT_ID);
-  $('cashierPassNew').value='';
-  const { error:e3 } = await supa.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token });
-  if(e3){ toast('Yönetici oturumu dönmedi: '+e3.message,false); return; }
-  toast('Kasiyer şifresi güncellendi'); await loadSettings();
+  if (!oldPass) { toast('Mevcut kasiyer şifresi bulunamadı', false); return; }
+
+  // Geçici Supabase client (yönetici oturumunu bozmaz)
+  const temp = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+
+  // Kasiyer olarak kısa süreli giriş yap → kendi şifresini güncelle → çık
+  const si = await temp.auth.signInWithPassword({ email: 'cashier@local.local', password: oldPass });
+  if (si.error) { toast('Kasiyer girişi hata: ' + si.error.message, false); return; }
+
+  const up = await temp.auth.updateUser({ password: newPass });
+  if (up.error) { toast('Şifre değişmedi: ' + up.error.message, false); return; }
+
+  await temp.auth.signOut();
+
+  // settings'i senkronla
+  await supa.from('settings')
+    .update({ cashier_pass: newPass, updated_at: new Date().toISOString() })
+    .eq('tenant_id', TENANT_ID);
+
+  $('cashierPassNew').value = '';
+  toast('Kasiyer şifresi güncellendi');
+  await loadSettings();
 };
 
 /* === Kayıt işlemleri === */
@@ -474,3 +488,4 @@ async function refreshReport(){
 
 </body>
 </html>
+

@@ -5,12 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Ehlizade Muhasebe – Pro</title>
 <meta name="theme-color" content="#225c0a"/>
-<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
-  tailwind.config = { theme:{ extend:{
-    colors:{ primary:'#225c0a', accent:'#e17703', dark:'#0f140f', soft:'#161d16', border:'#233e1a' }
-  }}}
+  tailwind.config = { theme:{ extend:{ colors:{ primary:'#225c0a', accent:'#e17703', dark:'#0f140f', soft:'#161d16', border:'#233e1a' } } } }
 </script>
 <style>
   body{background:#0f140f;color:#eef0ee;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto}
@@ -28,7 +25,6 @@
   .modal.show{display:flex}
   .tbl th{background:#1b221b}
 </style>
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -208,11 +204,10 @@
 const SUPABASE_URL      = 'https://vliakqhncjsqmrupopja.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsaWFrcWhuY2pzcW1ydXBvcGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5MzE5NTEsImV4cCI6MjA3MzUwNzk1MX0.AI0_9Yb1KAWaRNRMIEAe1LG4smZ-kUvUk2gF-h2E-dk';
 /* ========================================= */
-
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const $ = (id)=>document.getElementById(id);
+const $=(id)=>document.getElementById(id);
 const show=(id,on=true)=>$(id).classList.toggle('hidden',!on);
-const toast=(m,ok=true)=>{const t=$('toast'),b=$('toastBox');b.textContent=m;b.style.borderColor=ok?'#2e8b57':'#a33';b.style.background=ok?'#163c20':'#441818';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+const toast=(m,ok=true)=>{const t=$('toast'),b=$('toastBox');b.textContent=m;b.style.borderColor=ok?'#2e8b57':'#a33';b.style.background=ok?'#163c20':'#441818';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)};
 const fmt=(n)=>new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0));
 const todayStr=()=>new Date().toISOString().slice(0,10);
 const timeStr=(iso)=>new Date(iso).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
@@ -237,7 +232,7 @@ $('loginBtn').onclick=async()=>{
     if(!res.error) ok=true;
   }
   if(!ok){
-    $('firstSetup').classList.remove('hidden'); // başarısızsa kurulum butonunu göster
+    $('firstSetup').classList.remove('hidden'); // başarısızsa kurulum butonu görünür
     toast('Giriş başarısız',false);
     return;
   }
@@ -256,18 +251,17 @@ $('logoutBtn').onclick=async()=>{ await supa.auth.signOut(); location.reload(); 
 
 /* === Uygulama başlat === */
 async function afterLogin(){
-  const { data:{ user } } = await supa.auth.getUser();
+  // Sunucuda sistem kendi kendini toparlasın: tenant/settings/profil -> oluştur + dön
+  const boot = await supa.rpc('ensure_current_profile');
+  if(boot.error){ toast('Sunucu hazırlığı hata: '+boot.error.message,false); return; }
+  TENANT_ID = boot.data?.[0]?.tenant_id || boot.data?.tenant_id || null;
+  const role_from_rpc = boot.data?.[0]?.role || boot.data?.role || null;
+  if(!TENANT_ID){ toast('Tenant ID alınamadı', false); return; }
 
-  // Profil (RLS: kendi satırını görebilir)
-  let { data: prof, error } = await supa.from('profiles')
-    .select('id,role,tenant_id,email,created_at').eq('id',user.id).single();
-  if(error||!prof){ toast('Profil bulunamadı. (SQL’i çalıştır.)',false); return; }
-  profile = prof;
-
-  // TENANT_ID’yi sunucudan dinamik al
-  const t = await supa.rpc('get_tenant_id');
-  if(t.error){ toast('Tenant alınamadı: '+t.error.message,false); return; }
-  TENANT_ID = t.data;
+  // Profilini çek (kendi satırını görebilir)
+  const me = await supa.from('profiles').select('id,role,tenant_id,email,created_at').eq('id',(await supa.auth.getUser()).data.user.id).single();
+  if(me.error && !role_from_rpc){ toast('Profil bulunamadı', false); return; }
+  profile = me.data || { role: role_from_rpc, tenant_id: TENANT_ID };
 
   // UI
   show('authSection',false); show('appSection',true); show('logoutBtn',true);
@@ -281,7 +275,6 @@ async function afterLogin(){
   document.querySelector('[data-tab="report"]').onclick=()=>{document.querySelectorAll('[id^="tab-"]').forEach(s=>s.classList.add('hidden'));$('tab-report').classList.remove('hidden');};
   document.querySelector('[data-tab="today"]').click();
 
-  // Hazırlıklar
   chipGroup(document.getElementById('incCash'),document.getElementById('incCard'));
   chipGroup(document.getElementById('expCash'),document.getElementById('expCard'));
   document.getElementById('histDate').value=todayStr();
@@ -309,7 +302,7 @@ async function refreshUsers(){
     </td>
   </tr>`).join('');
 
-  // Şifre Sıfırla (kasiyer için hazır)
+  // Şifre sıfırla
   document.querySelectorAll('[data-reset]').forEach(b=>{
     b.onclick=async()=>{
       const email=b.getAttribute('data-reset');
@@ -372,22 +365,16 @@ $('adminPassSet').onclick=async()=>{
 
 $('cashierPassSet').onclick=async()=>{
   const newPass=$('cashierPassNew').value.trim(); if(!newPass || newPass.length<6){toast('6+ karakter gir',false);return;}
-  // Yönetici oturumunu sakla
   const prev=(await supa.auth.getSession())?.data?.session;
   if(!prev){ toast('Oturum yok',false); return; }
-  // Eski kasiyer şifresini al
   const s = await supa.from('settings').select('cashier_pass').eq('tenant_id',TENANT_ID).single();
   const oldPass = s.data?.cashier_pass;
-  // Kasiyerle geçici giriş
   const { error:e1 } = await supa.auth.signInWithPassword({ email:'cashier@local.local', password: oldPass });
   if(e1){ toast('Geçici giriş hata: '+e1.message,false); return; }
-  // Şifreyi güncelle
   const { error:e2 } = await supa.auth.updateUser({ password:newPass });
   if(e2){ toast('Şifre değişmedi: '+e2.message,false); return; }
-  // Ayarı yaz
   await supa.from('settings').update({ cashier_pass:newPass, updated_at:new Date().toISOString() }).eq('tenant_id',TENANT_ID);
   $('cashierPassNew').value='';
-  // Yöneticiye geri dön
   const { error:e3 } = await supa.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token });
   if(e3){ toast('Yönetici oturumu dönmedi: '+e3.message,false); return; }
   toast('Kasiyer şifresi güncellendi'); await loadSettings();
@@ -438,8 +425,8 @@ async function loadExpenseToday(){
   const rows=data||[];
   $('expBody').innerHTML=rows.map(r=>`<tr class="odd:bg-soft">
     <td class="p-2">${timeStr(r.at_time)}</td><td class="p-2">${r.method==='cash'?'Nakit':'Kart'}</td>
-    <td class="p-2">₺${fmt(r.amount)}</td><td class="p-2">${r.staff||''}</td><td class="p-2">${r.note||''}</td>
-    <td class="p-2">${rowActions(r.id)}</td></tr>`).join('');
+    <td class="p-2">₺${fmt(r.amount)}</td><td class="p-2">${r.staff||''}</td>
+    <td class="p-2">${r.note||''}</td><td class="p-2">${rowActions(r.id)}</td></tr>`).join('');
   bindDeleteHandlers('expBody', loadExpenseToday);
   let c=0,k=0; rows.forEach(r=>r.method==='cash'?c+=+r.amount:k+=+r.amount);
   $('expTotals').textContent=`Nakit: ₺${fmt(c)} | Kart: ₺${fmt(k)} | Toplam: ₺${fmt(c+k)}`;

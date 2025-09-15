@@ -234,8 +234,8 @@ $('loginBtn').onclick=async()=>{
   }
 
   // İlk kurulum yoksa yardımcı buton
-  if(!ok && pass==='123'){
-    $('firstSetup').classList.remove('hidden');
+  if(!ok){
+  $('firstSetup').classList.remove('hidden');
   }
 
   if(!ok){ toast('Giriş başarısız',false); return; }
@@ -478,3 +478,4 @@ $('cashierPassSet').onclick=async()=>{
 
 </body>
 </html>
+

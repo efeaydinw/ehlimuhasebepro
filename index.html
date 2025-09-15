@@ -218,9 +218,23 @@ function chipGroup(a,b){a.classList.add('active');a.onclick=()=>{a.classList.add
 
 /* ====== LOGIN (sadece şifre) ====== */
 $('showPw').onclick=()=>{const i=$('onlyPass');i.type=i.type==='password'?'text':'password'};
-$('loginBtn').onclick=async()=>{
-  const pass=$('onlyPass').value;
-  if(!pass){toast('Şifre gir',false);return;}
+$('loginBtn').onclick = async ()=>{
+  const pass = $('onlyPass').value;
+  if(!pass){ toast('Şifre gir', false); return; }
+
+  let ok = false;
+  let res = await supa.auth.signInWithPassword({ email:'admin@local.local',  password: pass });
+  if(!res.error) ok = true;
+  if(!ok){
+    res = await supa.auth.signInWithPassword({ email:'cashier@local.local', password: pass });
+    if(!res.error) ok = true;
+  }
+
+  // Başarısızsa kurulum butonunu GÖSTER
+  if(!ok){ $('firstSetup').classList.remove('hidden'); toast('Giriş başarısız', false); return; }
+
+  await afterLogin();
+};
 
   // Sırasıyla yönetici, sonra kasiyer hesabı ile dene
   let ok=false;
@@ -242,13 +256,10 @@ $('loginBtn').onclick=async()=>{
   await afterLogin();
 };
 
-// İlk Kurulum: 2 kullanıcıyı oluştur (şifreler 6+ hane)
+// İlk Kurulum: 2 kullanıcıyı oluştur (şifreler 6+ hane şart)
 $('initBtn').onclick = async () => {
-  // Yönetici
   await supa.auth.signUp({ email: 'admin@local.local',  password: '123456'  });
-  // Kasiyer
   await supa.auth.signUp({ email: 'cashier@local.local', password: '1234567' });
-
   toast('Kurulum tamam. Yönetici: 123456 | Kasiyer: 1234567 ile giriş yap.', true);
 };
 
@@ -478,5 +489,6 @@ $('cashierPassSet').onclick=async()=>{
 
 </body>
 </html>
+
 
 

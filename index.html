@@ -5,8 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Ehlizade Muhasebe – Pro</title>
 <meta name="theme-color" content="#225c0a"/>
+<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={theme:{extend:{colors:{primary:'#225c0a',accent:'#e17703',dark:'#0f140f',soft:'#161d16',border:'#233e1a'}}}}</script>
+<script>
+  tailwind.config = { theme:{ extend:{
+    colors:{ primary:'#225c0a', accent:'#e17703', dark:'#0f140f', soft:'#161d16', border:'#233e1a' }
+  }}}
+</script>
 <style>
   body{background:#0f140f;color:#eef0ee;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto}
   .card{background:#161d16;border:1px solid #233e1a;border-radius:16px}
@@ -23,6 +28,7 @@
   .modal.show{display:flex}
   .tbl th{background:#1b221b}
 </style>
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -42,23 +48,23 @@
 <!-- Toast -->
 <div id="toast" class="toast"><div id="toastBox" class="card p-3 text-sm"></div></div>
 
-<!-- LOGIN: sadece şifre -->
+<!-- LOGIN (sadece şifre) -->
 <section id="authSection" class="max-w-sm mx-auto p-4">
   <div class="card p-8">
     <div class="text-center mb-6">
       <div class="inline-grid place-items-center w-12 h-12 rounded-2xl bg-primary/80 font-black">E</div>
       <h1 class="text-2xl font-black text-accent mt-2">Giriş</h1>
-      <p class="text-xs opacity-75">Şifreyi yaz ve gir.</p>
+      <p class="text-xs opacity-75">Sadece şifre yaz ve gir.</p>
     </div>
     <label class="block mb-2 text-sm opacity-80">Şifre</label>
-    <input id="onlyPass" type="password" class="inp mb-3" placeholder="örn. 123 (Yönetici)"/>
+    <input id="onlyPass" type="password" class="inp mb-3" placeholder="Yönetici: 123456 | Kasiyer: 1234567"/>
     <div class="flex gap-2">
       <button id="loginBtn" class="btn w-full">Giriş</button>
-      <button id="showPw" class="btn btn-sec">👁</button>
+      <button id="showPw" class="btn btn-sec" title="Göster">👁</button>
     </div>
     <p id="firstSetup" class="text-xs opacity-70 mt-4 hidden">
-      İlk kez kuruyorsan buraya tıkla:
-      <button id="initBtn" class="btn btn-sec mt-2 w-full">İlk Kurulum: Yönetici(123) + Kasiyer(12345)</button>
+      Giriş olmuyorsa <b>İlk Kurulum</b> yap:
+      <button id="initBtn" class="btn btn-sec mt-2 w-full">İlk Kurulum: Yönetici(123456) + Kasiyer(1234567)</button>
     </p>
   </div>
 </section>
@@ -157,7 +163,7 @@
   </section>
 </main>
 
-<!-- ADMIN MODAL -->
+<!-- ADMIN (modal) -->
 <div id="adminModal" class="modal">
   <div class="card w-[min(900px,98vw)] p-6">
     <div class="flex items-center mb-4">
@@ -180,14 +186,14 @@
         <div class="card p-3 mb-3">
           <div class="text-sm">Yönetici Şifresi: <b id="adminPassLabel">—</b></div>
           <div class="mt-2 flex gap-2">
-            <input id="adminPassNew" class="inp" placeholder="Yeni şifre"/>
+            <input id="adminPassNew" class="inp" placeholder="Yeni şifre (6+ karakter)"/>
             <button id="adminPassSet" class="btn">Değiştir</button>
           </div>
         </div>
         <div class="card p-3">
           <div class="text-sm">Kasiyer Şifresi: <b id="cashierPassLabel">—</b></div>
           <div class="mt-2 flex gap-2">
-            <input id="cashierPassNew" class="inp" placeholder="Yeni şifre"/>
+            <input id="cashierPassNew" class="inp" placeholder="Yeni şifre (6+ karakter)"/>
             <button id="cashierPassSet" class="btn">Değiştir</button>
           </div>
         </div>
@@ -198,109 +204,202 @@
 </div>
 
 <script>
-/* ====== AYAR ====== */
+/* ================== AYAR ================== */
 const SUPABASE_URL      = 'https://vliakqhncjsqmrupopja.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsaWFrcWhuY2pzcW1ydXBvcGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5MzE5NTEsImV4cCI6MjA3MzUwNzk1MX0.AI0_9Yb1KAWaRNRMIEAe1LG4smZ-kUvUk2gF-h2E-dk';
-const TENANT_ID         = 'be61b393-b62f-4c9a-9686-f9f1c585c755';
-/* =================== */
+/* ========================================= */
 
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = (id)=>document.getElementById(id);
-const show = (id,on=true)=>$(id).classList.toggle('hidden',!on);
+const show=(id,on=true)=>$(id).classList.toggle('hidden',!on);
 const toast=(m,ok=true)=>{const t=$('toast'),b=$('toastBox');b.textContent=m;b.style.borderColor=ok?'#2e8b57':'#a33';b.style.background=ok?'#163c20':'#441818';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
 const fmt=(n)=>new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0));
 const todayStr=()=>new Date().toISOString().slice(0,10);
 const timeStr=(iso)=>new Date(iso).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
 
 let profile=null;
+let TENANT_ID=null;
 
 function chipGroup(a,b){a.classList.add('active');a.onclick=()=>{a.classList.add('active');b.classList.remove('active')};b.onclick=()=>{b.classList.add('active');a.classList.remove('active')};}
 
-/* ====== LOGIN (sadece şifre) ====== */
+/* === LOGIN (sadece şifre) === */
 $('showPw').onclick=()=>{const i=$('onlyPass');i.type=i.type==='password'?'text':'password'};
-$('loginBtn').onclick = async ()=>{
-  const pass = $('onlyPass').value;
-  if(!pass){ toast('Şifre gir', false); return; }
 
-  let ok = false;
-  let res = await supa.auth.signInWithPassword({ email:'admin@local.local',  password: pass });
-  if(!res.error) ok = true;
-  if(!ok){
-    res = await supa.auth.signInWithPassword({ email:'cashier@local.local', password: pass });
-    if(!res.error) ok = true;
-  }
+$('loginBtn').onclick=async()=>{
+  const pass=$('onlyPass').value.trim();
+  if(!pass){ toast('Şifre gir',false); return; }
 
-  // Başarısızsa kurulum butonunu GÖSTER
-  if(!ok){ $('firstSetup').classList.remove('hidden'); toast('Giriş başarısız', false); return; }
-
-  await afterLogin();
-};
-
-  // Sırasıyla yönetici, sonra kasiyer hesabı ile dene
   let ok=false;
-  // Yönetici dene
   let res = await supa.auth.signInWithPassword({ email:'admin@local.local', password: pass });
   if(!res.error) ok=true;
-  // Olmadıysa kasiyer dene
   if(!ok){
     res = await supa.auth.signInWithPassword({ email:'cashier@local.local', password: pass });
     if(!res.error) ok=true;
   }
-
-  // İlk kurulum yoksa yardımcı buton
   if(!ok){
-  $('firstSetup').classList.remove('hidden');
+    $('firstSetup').classList.remove('hidden'); // başarısızsa kurulum butonunu göster
+    toast('Giriş başarısız',false);
+    return;
   }
-
-  if(!ok){ toast('Giriş başarısız',false); return; }
   await afterLogin();
 };
 
-// İlk Kurulum: 2 kullanıcıyı oluştur (şifreler 6+ hane şart)
-$('initBtn').onclick = async () => {
-  await supa.auth.signUp({ email: 'admin@local.local',  password: '123456'  });
-  await supa.auth.signUp({ email: 'cashier@local.local', password: '1234567' });
-  toast('Kurulum tamam. Yönetici: 123456 | Kasiyer: 1234567 ile giriş yap.', true);
+/* === İlk Kurulum: 6+ karakter şifre şart === */
+$('initBtn').onclick=async()=>{
+  await supa.auth.signUp({ email:'admin@local.local',  password:'123456'  });
+  await supa.auth.signUp({ email:'cashier@local.local', password:'1234567' });
+  toast('Kurulum tamam. Yönetici: 123456 | Kasiyer: 1234567',true);
 };
 
-/* ====== ÇIKIŞ ====== */
+/* === Çıkış === */
 $('logoutBtn').onclick=async()=>{ await supa.auth.signOut(); location.reload(); };
 
-/* ====== Sonrası ====== */
+/* === Uygulama başlat === */
 async function afterLogin(){
   const { data:{ user } } = await supa.auth.getUser();
-  let { data: prof, error } = await supa.from('profiles').select('id,role,tenant_id,email,created_at').eq('id',user.id).single();
+
+  // Profil (RLS: kendi satırını görebilir)
+  let { data: prof, error } = await supa.from('profiles')
+    .select('id,role,tenant_id,email,created_at').eq('id',user.id).single();
   if(error||!prof){ toast('Profil bulunamadı. (SQL’i çalıştır.)',false); return; }
-  profile=prof;
+  profile = prof;
+
+  // TENANT_ID’yi sunucudan dinamik al
+  const t = await supa.rpc('get_tenant_id');
+  if(t.error){ toast('Tenant alınamadı: '+t.error.message,false); return; }
+  TENANT_ID = t.data;
 
   // UI
   show('authSection',false); show('appSection',true); show('logoutBtn',true);
   $('roleBadge').textContent = profile.role==='owner'?'Yönetici':'Kasiyer';
-  show('roleBadge',true);
-  show('adminBtn', profile.role==='owner');
+  show('roleBadge',true); show('adminBtn', profile.role==='owner');
 
-  // Varsayılan tablar
+  // Tablar
   document.querySelector('[data-tab="today"]').onclick=()=>{document.querySelectorAll('[id^="tab-"]').forEach(s=>s.classList.add('hidden'));$('tab-today').classList.remove('hidden');};
   document.querySelector('[data-tab="expense"]').onclick=()=>{document.querySelectorAll('[id^="tab-"]').forEach(s=>s.classList.add('hidden'));$('tab-expense').classList.remove('hidden');};
   document.querySelector('[data-tab="history"]').onclick=()=>{document.querySelectorAll('[id^="tab-"]').forEach(s=>s.classList.add('hidden'));$('tab-history').classList.remove('hidden');};
   document.querySelector('[data-tab="report"]').onclick=()=>{document.querySelectorAll('[id^="tab-"]').forEach(s=>s.classList.add('hidden'));$('tab-report').classList.remove('hidden');};
-
   document.querySelector('[data-tab="today"]').click();
 
-  // Başlangıç yüklemeleri
-  $('histDate').value=todayStr();
+  // Hazırlıklar
   chipGroup(document.getElementById('incCash'),document.getElementById('incCard'));
   chipGroup(document.getElementById('expCash'),document.getElementById('expCard'));
+  document.getElementById('histDate').value=todayStr();
+
   await loadToday(); await loadExpenseToday(); await loadHistory(); await refreshReport();
 }
 
-/* ====== Kayıt İşlemleri ====== */
+/* === Yönetim Paneli (sadece Yönetici) === */
+$('adminBtn').onclick=async()=>{ await refreshUsers(); await loadSettings(); $('adminModal').classList.add('show'); };
+$('closeAdmin').onclick=()=>$('adminModal').classList.remove('show');
+
+async function refreshUsers(){
+  const { data, error } = await supa.from('profiles')
+    .select('id,email,role,created_at')
+    .eq('tenant_id', TENANT_ID)
+    .order('created_at',{ascending:true});
+  if(error){ toast('Kullanıcılar alınamadı: '+error.message,false); return; }
+
+  $('userBody').innerHTML=(data||[]).map(u=>`<tr class="odd:bg-soft">
+    <td class="p-2">${u.email||'—'}</td>
+    <td class="p-2">${u.role==='owner'?'Yönetici':'Kasiyer'}</td>
+    <td class="p-2">${new Date(u.created_at).toLocaleString('tr-TR')}</td>
+    <td class="p-2">
+      ${u.email==='admin@local.local'?'':`<button class="btn btn-sec text-xs" data-reset="${u.email}">Şifre Sıfırla</button>`}
+    </td>
+  </tr>`).join('');
+
+  // Şifre Sıfırla (kasiyer için hazır)
+  document.querySelectorAll('[data-reset]').forEach(b=>{
+    b.onclick=async()=>{
+      const email=b.getAttribute('data-reset');
+      const newPass=prompt(`${email} için yeni şifre (6+ karakter)?`); if(!newPass) return;
+
+      // Yönetici oturumunu sakla
+      const prev=(await supa.auth.getSession())?.data?.session;
+      if(!prev){ toast('Oturum yok',false); return; }
+
+      // Eski şifreyi settings'ten çek
+      let oldPass=null;
+      if(email==='cashier@local.local'){
+        const s = await supa.from('settings').select('cashier_pass').eq('tenant_id',TENANT_ID).single();
+        oldPass = s.data?.cashier_pass;
+      } else if (email==='admin@local.local'){
+        const s = await supa.from('settings').select('admin_pass').eq('tenant_id',TENANT_ID).single();
+        oldPass = s.data?.admin_pass;
+      } else {
+        oldPass = prompt('Eski şifre?'); if(!oldPass) return;
+      }
+
+      // Geçici giriş → şifre değiştir → geri dön
+      const { error:e1 } = await supa.auth.signInWithPassword({ email, password: oldPass });
+      if(e1){ toast('Geçici giriş hata: '+e1.message,false); return; }
+      const { error:e2 } = await supa.auth.updateUser({ password:newPass });
+      if(e2){ toast('Şifre değişmedi: '+e2.message,false); return; }
+
+      // settings senkron
+      if(email==='cashier@local.local'){
+        await supa.from('settings').update({ cashier_pass:newPass, updated_at:new Date().toISOString() }).eq('tenant_id',TENANT_ID);
+      }
+      if(email==='admin@local.local'){
+        await supa.from('settings').update({ admin_pass:newPass, updated_at:new Date().toISOString() }).eq('tenant_id',TENANT_ID);
+      }
+
+      // Yönetici oturumuna geri dön
+      const { error:e3 } = await supa.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token });
+      if(e3){ toast('Yönetici oturumu dönmedi: '+e3.message,false); return; }
+
+      toast('Şifre güncellendi'); await loadSettings();
+    };
+  });
+}
+
+async function loadSettings(){
+  const { data, error } = await supa.from('settings')
+    .select('admin_pass,cashier_pass').eq('tenant_id',TENANT_ID).single();
+  if(error){ $('adminPassLabel').textContent='—'; $('cashierPassLabel').textContent='—'; return; }
+  $('adminPassLabel').textContent = data.admin_pass;
+  $('cashierPassLabel').textContent = data.cashier_pass;
+}
+
+$('adminPassSet').onclick=async()=>{
+  const newPass=$('adminPassNew').value.trim(); if(!newPass || newPass.length<6){toast('6+ karakter gir',false);return;}
+  const { error:e1 } = await supa.auth.updateUser({ password:newPass });
+  if(e1){ toast('Şifre değişmedi: '+e1.message,false); return; }
+  await supa.from('settings').update({ admin_pass:newPass, updated_at:new Date().toISOString() }).eq('tenant_id',TENANT_ID);
+  $('adminPassNew').value=''; toast('Yönetici şifresi güncellendi'); await loadSettings();
+};
+
+$('cashierPassSet').onclick=async()=>{
+  const newPass=$('cashierPassNew').value.trim(); if(!newPass || newPass.length<6){toast('6+ karakter gir',false);return;}
+  // Yönetici oturumunu sakla
+  const prev=(await supa.auth.getSession())?.data?.session;
+  if(!prev){ toast('Oturum yok',false); return; }
+  // Eski kasiyer şifresini al
+  const s = await supa.from('settings').select('cashier_pass').eq('tenant_id',TENANT_ID).single();
+  const oldPass = s.data?.cashier_pass;
+  // Kasiyerle geçici giriş
+  const { error:e1 } = await supa.auth.signInWithPassword({ email:'cashier@local.local', password: oldPass });
+  if(e1){ toast('Geçici giriş hata: '+e1.message,false); return; }
+  // Şifreyi güncelle
+  const { error:e2 } = await supa.auth.updateUser({ password:newPass });
+  if(e2){ toast('Şifre değişmedi: '+e2.message,false); return; }
+  // Ayarı yaz
+  await supa.from('settings').update({ cashier_pass:newPass, updated_at:new Date().toISOString() }).eq('tenant_id',TENANT_ID);
+  $('cashierPassNew').value='';
+  // Yöneticiye geri dön
+  const { error:e3 } = await supa.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token });
+  if(e3){ toast('Yönetici oturumu dönmedi: '+e3.message,false); return; }
+  toast('Kasiyer şifresi güncellendi'); await loadSettings();
+};
+
+/* === Kayıt işlemleri === */
 function rowActions(id){return `<button class="btn btn-sec text-xs" data-del="${id}">🗑 Sil</button>`;}
 function bindDeleteHandlers(containerId, reloadFn){
   document.querySelectorAll('#'+containerId+' [data-del]').forEach(b=>{
     b.onclick=async()=>{
       if(!confirm('Kayıt silinsin mi?'))return;
-      const { error } = await supa.from('entries').delete().eq('id',b.getAttribute('data-del')).eq('tenant_id',profile.tenant_id);
+      const { error } = await supa.from('entries').delete().eq('id',b.getAttribute('data-del')).eq('tenant_id',TENANT_ID);
       if(error){toast('Silinemedi: '+error.message,false);return;}
       toast('Silindi'); await reloadFn();
     };
@@ -309,7 +408,7 @@ function bindDeleteHandlers(containerId, reloadFn){
 
 async function loadToday(){
   const { data, error } = await supa.from('entries').select('id,method,amount,staff,note,at_time')
-    .eq('tenant_id',profile.tenant_id).eq('kind','income').eq('at_date',todayStr()).order('id',{ascending:false});
+    .eq('tenant_id',TENANT_ID).eq('kind','income').eq('at_date',todayStr()).order('id',{ascending:false});
   if(error){toast(error.message,false);return;}
   const rows=data||[];
   $('incBody').innerHTML=rows.map(r=>`<tr class="odd:bg-soft">
@@ -327,14 +426,14 @@ document.getElementById('saveIncome').onclick=async()=>{
   const method=document.getElementById('incCash').classList.contains('active')?'cash':'card';
   const staff=document.getElementById('incStaff').value.trim()||null;
   const note=document.getElementById('incNote').value.trim()||null;
-  const {error}=await supa.from('entries').insert({tenant_id:profile.tenant_id,kind:'income',method,amount,staff,note});
+  const {error}=await supa.from('entries').insert({tenant_id:TENANT_ID,kind:'income',method,amount,staff,note});
   if(error){toast(error.message,false);return;}
   document.getElementById('incAmount').value='';document.getElementById('incNote').value='';toast('Gelir eklendi');await loadToday();
 };
 
 async function loadExpenseToday(){
   const { data, error } = await supa.from('entries').select('id,method,amount,staff,note,at_time')
-    .eq('tenant_id',profile.tenant_id).eq('kind','expense').eq('at_date',todayStr()).order('id',{ascending:false});
+    .eq('tenant_id',TENANT_ID).eq('kind','expense').eq('at_date',todayStr()).order('id',{ascending:false});
   if(error){toast(error.message,false);return;}
   const rows=data||[];
   $('expBody').innerHTML=rows.map(r=>`<tr class="odd:bg-soft">
@@ -352,7 +451,7 @@ document.getElementById('saveExpense').onclick=async()=>{
   const method=document.getElementById('expCash').classList.contains('active')?'cash':'card';
   const staff=document.getElementById('expStaff').value.trim()||null;
   const note=document.getElementById('expNote').value.trim()||null;
-  const {error}=await supa.from('entries').insert({tenant_id:profile.tenant_id,kind:'expense',method,amount,staff,note});
+  const {error}=await supa.from('entries').insert({tenant_id:TENANT_ID,kind:'expense',method,amount,staff,note});
   if(error){toast(error.message,false);return;}
   document.getElementById('expAmount').value='';document.getElementById('expNote').value='';toast('Gider eklendi');await loadExpenseToday();
 };
@@ -361,7 +460,7 @@ document.getElementById('saveExpense').onclick=async()=>{
 document.getElementById('loadHistory').onclick=loadHistory;
 async function loadHistory(){
   const d=document.getElementById('histDate').value||todayStr();
-  const base=supa.from('entries').select('method,amount,staff,note,at_time').eq('tenant_id',profile.tenant_id).eq('at_date',d);
+  const base=supa.from('entries').select('method,amount,staff,note,at_time').eq('tenant_id',TENANT_ID).eq('at_date',d);
   const [inc,exp]=await Promise.all([base.eq('kind','income').order('id',{ascending:false}),base.eq('kind','expense').order('id',{ascending:false})]);
   const incRows=inc.data||[], expRows=exp.data||[];
   $('histInc').innerHTML=incRows.map(r=>`<tr class="odd:bg-soft"><td class="p-2">${timeStr(r.at_time)}</td><td class="p-2">${r.method==='cash'?'Nakit':'Kart'}</td><td class="p-2">₺${fmt(r.amount)}</td><td class="p-2">${r.staff||''}</td><td class="p-2">${r.note||''}</td></tr>`).join('');
@@ -374,7 +473,7 @@ async function loadHistory(){
 document.getElementById('refreshReport').onclick=refreshReport;
 async function refreshReport(){
   const d=todayStr();
-  const base=supa.from('entries').select('method,amount').eq('tenant_id',profile.tenant_id).eq('at_date',d);
+  const base=supa.from('entries').select('method,amount').eq('tenant_id',TENANT_ID).eq('at_date',d);
   const [inc,exp]=await Promise.all([base.eq('kind','income'),base.eq('kind','expense')]);
   const incRows=inc.data||[], expRows=exp.data||[];
   let cash=0,card=0; incRows.forEach(r=>r.method==='cash'?cash+=+r.amount:card+=+r.amount);
@@ -382,113 +481,9 @@ async function refreshReport(){
   $('repLines').innerHTML=[`Brüt Gelir: ₺${fmt(cash+card)} (Nakit: ₺${fmt(cash)} | Kart: ₺${fmt(card)})`,`Toplam Gider: ₺${fmt(expense)}`,`Kasa Farkı: ₺${fmt(cash+card-expense)}`].map(l=>`<div>• ${l}</div>`).join('');
 }
 
-/* ====== Yönetim Paneli (sadece Yönetici) ====== */
-$('adminBtn').onclick=async()=>{ await refreshUsers(); await loadSettings(); $('adminModal').classList.add('show'); };
-$('closeAdmin').onclick=()=>$('adminModal').classList.remove('show');
-
-async function refreshUsers(){
-  const { data, error } = await supa.from('profiles').select('id,email,role,created_at').eq('tenant_id',TENANT_ID).order('created_at',{ascending:true});
-  if(error){toast('Kullanıcı listesi alınamadı: '+error.message,false);return;}
-  $('userBody').innerHTML=(data||[]).map(u=>`<tr class="odd:bg-soft">
-    <td class="p-2">${u.email||'—'}</td>
-    <td class="p-2">${u.role==='owner'?'Yönetici':'Kasiyer'}</td>
-    <td class="p-2">${new Date(u.created_at).toLocaleString('tr-TR')}</td>
-    <td class="p-2">
-      ${u.email==='admin@local.local'?'':`<button class="btn btn-sec text-xs" data-reset="${u.email}">Şifre Sıfırla</button>`}
-    </td>
-  </tr>`).join('');
-
-  // "Şifre Sıfırla": yeni şifre al, ilgili kullanıcıyla geçici oturum açıp update et, sonra geri dön
-  document.querySelectorAll('[data-reset]').forEach(b=>{
-    b.onclick=async()=>{
-      const email=b.getAttribute('data-reset');
-      const newPass=prompt(`${email} için yeni şifre?`); if(!newPass) return;
-
-      // Ayarlarda cashier_pass'ı da güncelleyelim (kasiyer ise)
-      const isCashier = email==='cashier@local.local';
-
-      // Yönetici oturumunu sakla
-      const prev=(await supa.auth.getSession())?.data?.session;
-      if(!prev){toast('Oturum yok',false);return;}
-
-      // Eski şifreyi settings'ten çekelim ki geçici login yapabilelim
-      let oldPass = null;
-      if(isCashier){
-        const s = await supa.from('settings').select('cashier_pass').eq('tenant_id',TENANT_ID).single();
-        oldPass = s.data?.cashier_pass;
-      } else {
-        // Başka kullanıcılar için prompt'la isteyebilirsin (bu örnekte tek kasiyer var)
-        oldPass = prompt('Eski şifre?'); if(!oldPass) return;
-      }
-
-      // Geçici oturum: hedef kullanıcıyla giriş
-      const { error: e1 } = await supa.auth.signInWithPassword({ email, password: oldPass });
-      if(e1){ toast('Geçici giriş olmadı: '+e1.message,false); return; }
-
-      // Şifresini değiştir
-      const { error: e2 } = await supa.auth.updateUser({ password: newPass });
-      if(e2){ toast('Şifre güncellenemedi: '+e2.message,false); return; }
-
-      // Ayarları senkronla
-      if(isCashier){
-        await supa.from('settings').update({ cashier_pass:newPass, updated_at:new Date().toISOString() }).eq('tenant_id',TENANT_ID);
-      }
-
-      // Yönetici oturumuna geri dön
-      const { error: e3 } = await supa.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token });
-      if(e3){ toast('Yönetici oturumu dönmedi: '+e3.message,false); return; }
-
-      toast('Şifre güncellendi');
-      await loadSettings();
-    };
-  });
-}
-
-async function loadSettings(){
-  const { data, error } = await supa.from('settings').select('admin_pass,cashier_pass').eq('tenant_id',TENANT_ID).single();
-  if(error){ $('adminPassLabel').textContent='—'; $('cashierPassLabel').textContent='—'; return; }
-  $('adminPassLabel').textContent = data.admin_pass;
-  $('cashierPassLabel').textContent = data.cashier_pass;
-}
-
-$('adminPassSet').onclick=async()=>{
-  const newPass=$('adminPassNew').value.trim(); if(!newPass){toast('Yeni şifre gir',false);return;}
-  // Yönetici kendi şifresini doğrudan günceller
-  const { error:e1 } = await supa.auth.updateUser({ password:newPass });
-  if(e1){toast('Şifre değişemedi: '+e1.message,false);return;}
-  await supa.from('settings').update({ admin_pass:newPass, updated_at:new Date().toISOString() }).eq('tenant_id',TENANT_ID);
-  $('adminPassNew').value=''; toast('Yönetici şifresi güncellendi'); await loadSettings();
-};
-
-$('cashierPassSet').onclick=async()=>{
-  const newPass=$('cashierPassNew').value.trim(); if(!newPass){toast('Yeni şifre gir',false);return;}
-  // Yönetici oturumunu sakla
-  const prev=(await supa.auth.getSession())?.data?.session;
-  if(!prev){toast('Oturum yok',false);return;}
-  // Eski kasiyer şifresini ayarlardan çek
-  const s = await supa.from('settings').select('cashier_pass').eq('tenant_id',TENANT_ID).single();
-  const oldPass = s.data?.cashier_pass;
-  // Kasiyerle geçici giriş
-  const { error:e1 } = await supa.auth.signInWithPassword({ email:'cashier@local.local', password: oldPass });
-  if(e1){toast('Geçici giriş olmadı: '+e1.message,false);return;}
-  // Şifre güncelle
-  const { error:e2 } = await supa.auth.updateUser({ password:newPass });
-  if(e2){toast('Şifre değişmedi: '+e2.message,false);return;}
-  // Ayarı yaz
-  await supa.from('settings').update({ cashier_pass:newPass, updated_at:new Date().toISOString() }).eq('tenant_id',TENANT_ID);
-  $('cashierPassNew').value='';
-  // Yöneticiye geri dön
-  const { error:e3 } = await supa.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token });
-  if(e3){toast('Yönetici oturumu dönmedi: '+e3.message,false);return;}
-  toast('Kasiyer şifresi güncellendi'); await loadSettings();
-};
-
-/* ====== Otomatik giriş devam ====== */
+/* Oturum varsa devam et */
 (async()=>{const s=await supa.auth.getSession(); if(s.data.session){await afterLogin();}})();
 </script>
 
 </body>
 </html>
-
-
-

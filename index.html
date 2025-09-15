@@ -242,14 +242,14 @@ $('loginBtn').onclick=async()=>{
   await afterLogin();
 };
 
-/* ====== İlk Kurulum: 2 kullanıcıyı oluştur ====== */
-$('initBtn').onclick=async()=>{
-  // 1) Yönetici yoksa oluştur
-  await supa.auth.signUp({ email:'admin@local.local', password:'123' });
-  // 2) Kasiyer yoksa oluştur
-  // (admin signUp’tan sonra oturum admin’e geçebilir; sorun değil)
-  await supa.auth.signUp({ email:'cashier@local.local', password:'12345' });
-  toast('Kurulum tamam. 123 veya 12345 ile giriş yap.',true);
+// İlk Kurulum: 2 kullanıcıyı oluştur (şifreler 6+ hane)
+$('initBtn').onclick = async () => {
+  // Yönetici
+  await supa.auth.signUp({ email: 'admin@local.local',  password: '123456'  });
+  // Kasiyer
+  await supa.auth.signUp({ email: 'cashier@local.local', password: '1234567' });
+
+  toast('Kurulum tamam. Yönetici: 123456 | Kasiyer: 1234567 ile giriş yap.', true);
 };
 
 /* ====== ÇIKIŞ ====== */
@@ -478,4 +478,5 @@ $('cashierPassSet').onclick=async()=>{
 
 </body>
 </html>
+
 
